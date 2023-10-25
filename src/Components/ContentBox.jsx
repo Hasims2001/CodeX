@@ -7,10 +7,12 @@ import {
   Text,
   useToast,
 } from "@chakra-ui/react";
+import ReactMarkdown from 'react-markdown';
 import Editor from "@monaco-editor/react";
 import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Button } from "./Button";
 import reducer from "../API/reducer";
+import "../ContentBox.module.css";
 import { postConvertCode, postDebug, postQualityCheck } from "../API/api";
 const languages = {
   "untitled.txt": {
@@ -49,7 +51,7 @@ const init = {
     loading: false,
     clicked:"",
     error: "",
-    output: ""
+    output: "your output will be here."
 }
 
 export const ContentBox = () => {
@@ -59,11 +61,16 @@ export const ContentBox = () => {
   const [state, dispatch] = useReducer(reducer, init)
   const {loading, error, output, clicked} = state;
   const fileLang = languages[lang];
+  const [convertLan, setConvertLan] = useState("");
+  const [outputCode, setOutputCode] = useState(output);
   const toast = useToast();
   const handleEditor = (editor, monaco) => {
     editorRef.current = editor;
   };
 
+  useEffect(()=>{
+    setOutputCode(output);
+  }, [output]);
   function checkInput(code) {
     if (code === "") {
       toast({
@@ -102,10 +109,10 @@ export const ContentBox = () => {
        checkOutput(result);
     }
   };
-  const handleConvert =async () => {
+  const handleConvert = async () => {
     let code = editorRef.current.getValue();
-    const convertLan = document.querySelector("#convertLan");
-    if (convertLan.value === "") {
+
+    if (convertLan === "") {
       toast({
         title: "Please enter language to convert!",
         status: "error",
@@ -116,13 +123,15 @@ export const ContentBox = () => {
       let checked = checkInput(code);
       if (!checked) {
         dispatch({type: "LOADING", payload: "Convert"});
-       let result =  await postConvertCode(code, lang, convertLan.value );
+        let curr = lang.split(".");
+       let result =  await postConvertCode(code,curr[1], convertLan );
        checkOutput(result);
+       
       }
     
     }
   };
-  console.log(error);
+
   useCallback(()=>{
     if(error){
         toast({
@@ -179,8 +188,10 @@ export const ContentBox = () => {
         <Stack px={10} gap={6}>
           <Flex alignItems={"center"} gap={6}>
             <Input
-              id="convertLan"
               type="text"
+              w={'auto'}
+              value={convertLan}
+              onChange={(e)=> setConvertLan(e.target.value)}
               placeholder="Convert code into..."
             />
             <Button handler={handleConvert} content={loading && clicked === "Convert" ? "Loading..." : "Convert"}></Button>
@@ -194,15 +205,16 @@ export const ContentBox = () => {
           </Flex>
         </Stack>
         {/* output */}
-        <Editor
+       {convertLan !== "" ? <Editor
           width="49vw"
           height="70vh"
           theme="vs-dark"
           options={{ fontSize: font }}
-          readOnly
-          defaultLanguage="markdown"
-          defaultValue={`# your output will be here`}
-        ></Editor>
+          language={convertLan}
+          value={outputCode}
+        ></Editor> : <Box w={"49vw"} h={"70vh"} pl={"2rem"} pt={"1rem"} pr={"1rem"} color={"#fff"} bg={"#1E1E1E"}>
+            <ReactMarkdown>{outputCode}</ReactMarkdown>
+            </Box>}
       </Stack>
     </Flex>
   );

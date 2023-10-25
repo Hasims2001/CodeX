@@ -14,6 +14,14 @@ function reducer(state, {type, payload}){
                 loading:false,
                 error: payload
             }
+        case "OUTPUT":
+            return {
+                ...state,
+                loading: false,
+                error: "",
+                clicked: "",
+                output: payload
+            }
         default:
             return state;
     }
