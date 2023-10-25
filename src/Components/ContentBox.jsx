@@ -132,7 +132,7 @@ export const ContentBox = () => {
     }
   };
 
-  useCallback(()=>{
+  useEffect(()=>{
     if(error){
         toast({
             title: error,
