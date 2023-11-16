@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import ReactMarkdown from 'react-markdown';
 import Editor from "@monaco-editor/react";
-import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Button } from "./Button";
 import reducer from "../API/reducer";
 import "../ContentBox.module.css";
@@ -54,7 +54,7 @@ const init = {
     output: "your output will be here."
 }
 
-export const ContentBox = () => {
+export const ContentBox = ({content}) => {
   const editorRef = useRef(null);
   const [lang, setLang] = useState("scripts.js");
   const [font, setFont] = useState(16);
@@ -64,6 +64,7 @@ export const ContentBox = () => {
   const [convertLan, setConvertLan] = useState("");
   const [outputCode, setOutputCode] = useState(output);
   const toast = useToast();
+  const [isEdit, setIsEdit] = useState(false);
   const handleEditor = (editor, monaco) => {
     editorRef.current = editor;
   };
@@ -97,6 +98,7 @@ export const ContentBox = () => {
     if (!checked) {
         dispatch({type: "LOADING", payload: "Quality Check"});
         let result = await postQualityCheck(code );
+       setIsEdit(false);
         checkOutput(result);
     }
   };
@@ -106,6 +108,7 @@ export const ContentBox = () => {
     if (!checked) {
         dispatch({type: "LOADING",  payload: "Debug"});
        let result = await postDebug(code );
+       setIsEdit(false);
        checkOutput(result);
     }
   };
@@ -125,6 +128,7 @@ export const ContentBox = () => {
         dispatch({type: "LOADING", payload: "Convert"});
         let curr = lang.split(".");
        let result =  await postConvertCode(code,curr[1], convertLan );
+       setIsEdit(true);
        checkOutput(result);
        
       }
@@ -181,6 +185,7 @@ export const ContentBox = () => {
           onMount={handleEditor}
           defaultValue={fileLang.value}
           path={fileLang.name}
+          value={content || ""}
           options={{ fontSize: font }}
         ></Editor>
       </Stack>
@@ -205,7 +210,7 @@ export const ContentBox = () => {
           </Flex>
         </Stack>
         {/* output */}
-       {convertLan !== "" ? <Editor
+       {isEdit ? <Editor
           width="49vw"
           height="70vh"
           theme="vs-dark"

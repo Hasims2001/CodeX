@@ -30,3 +30,13 @@ export const postQualityCheck = async(code)=>{
         return {issue: true, msg: error.message};
     }
 }
+
+export const getFileContent = async(link) =>{
+    try {   
+        let res = await axios.get(`https://api.github.com/repos/${link}`);
+        res = await res?.data;
+        return res;
+    } catch (error) {
+        return {issue: true, msg: error.message};
+    }
+}
